@@ -1,0 +1,40 @@
+---
+- hosts: redis
+  serial: 1
+  tasks:
+    - name: get redis nodes
+      shell: redis-cli -c -h "{{ redis_host }}" -p "{{ redis_port }}" cluster nodes | grep myself
+      delegate_to: localhost
+      register: node_result
+
+    - name: create variable from parts
+      set_fact:
+        node_id: "{{ node_result.stdout.split(' ')[0] }}"
+
+    - name: get replica of node if it identifies as a master
+      shell: redis-cli -c -h "{{ redis_host }}" -p "{{ redis_port }}" cluster replicas "{{ node_id }}" | cut -d ' ' -f 2
+      register: node_replica
+      delegate_to: localhost
+      when: "'master' in node_result.stdout"
+
+    - name: create variable with slave ip
+      set_fact:
+        replica_ip: "{{ node_replica.stdout.split(':')[0] }}"
+      when: "'master' in node_result.stdout"
+
+    - name: create variable with slave port
+      set_fact:
+        replica_port: "{{ node_replica.stdout.split(':')[1] }}"
+      when: "'master' in node_result.stdout"
+
+    - name: perform cluster failover
+      command: redis-cli -c -h "{{ replica_ip }}" -p "{{ replica_port }}" cluster failover
+      register: failover_output
+      delegate_to: localhost
+      when: "'master' in node_result.stdout"
+
+    - name: get client list and only continue when empty 
+      shell: redis-cli -c -h "{{ redis_host }}" -p "{{ redis_port }}" client list | grep get | wc -l
+      register: redis_client_list
+      when: "'master' in node_result.stdout"
+      until: redis_client_list.stdout == "0"

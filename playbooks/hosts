@@ -1,0 +1,10 @@
+[ansible_box]
+localhost
+
+[redis]
+redis0
+redis1
+redis2
+redis3
+redis4
+redis5

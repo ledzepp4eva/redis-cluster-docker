@@ -1,0 +1,63 @@
+version: '3'
+services:
+  redis_client:
+    image: redis:5
+    networks:
+      redis_cluster_network:
+        ipv4_address: 10.0.2.100
+    ports:
+    - "127.0.0.1:6379:6379"
+  redis_7000:
+    build: cluster-test/7000/.
+    ports:
+    - "7000:7000"
+    networks: 
+      redis_cluster_network:
+        ipv4_address: 10.0.2.2
+  redis_7001:
+    build: cluster-test/7001/.
+    ports:
+    - "7001:7001"
+    networks:
+      redis_cluster_network:
+        ipv4_address: 10.0.2.3
+  redis_7002:
+    build: cluster-test/7002/.
+    ports:
+    - "7002:7002"
+    networks:
+      redis_cluster_network:
+        ipv4_address: 10.0.2.4
+  redis_7003:
+    build: cluster-test/7003/.
+    ports:
+    - "7003:7003"
+    networks:
+      redis_cluster_network:
+        ipv4_address: 10.0.2.5
+  redis_7004:
+    build: cluster-test/7004/.
+    ports:
+    - "7004:7004"
+    networks:
+      redis_cluster_network:
+        ipv4_address: 10.0.2.6
+  redis_7005:
+    build: cluster-test/7005/.
+    ports:
+    - "7005:7005"
+    networks:
+      redis_cluster_network:
+        ipv4_address: 10.0.2.7
+
+networks:
+  redis_cluster_network:
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.0.2.0/24
+
+##Notes
+##redis-cli --cluster create redis-cluster-docker_redis_7000_1:7000 redis-cluster-docker_redis_7001_1:7001 redis-cluster-docker_redis_7002_1:7002 redis-cluster-docker_redis_7003_1:7003 redis-cluster-docker_redis_7004_1:7004 redis-cluster-docker_redis_7005_1:7005 --cluster-replicas 1
+
+#redis-cli --cluster create 10.0.2.2:7000 10.0.2.3:7001 10.0.2.4:7002 10.0.2.5:7003 10.0.2.6:7004 10.0.2.7:7005 --cluster-replicas 1
